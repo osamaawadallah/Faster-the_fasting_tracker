@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: fasting
+      POSTGRES_PASSWORD: fasting123
+      POSTGRES_DB: fasting_app
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend_api
+    # image: fasting-backend:latest
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend_api:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  # alembic:
+  #   image: fasting-backend:latest  # ✅ reuse local image built above
+  #   command: alembic upgrade head
+  #   volumes:
+  #     - ./backend_api:/code
+  #   depends_on:
+  #     - backend
+
+  # flutter:
+  #   build: ./mobile_app
+  #   container_name: flutter_app
+  #   ports:
+  #     - "3000:3000"  # Web Flutter access
+  #   volumes:
+  #     - ./mobile_app:/app
+  #     - flutter_cache:/root/.pub-cache
+  #   tty: true
+  #   stdin_open: true
+  #   depends_on:
+  #     - backend
+
+volumes:
+  postgres_data:
+  flutter_cache:
